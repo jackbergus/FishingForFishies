@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+"""This implements the skeleton for the server for the machine learning task"""
 
 import socket
 from datetime import datetime
@@ -15,6 +16,10 @@ def recvall(sock):
     return data
 
 def relational_learning_model(image)
+    """
+    This metod takes as an input the binary representation of a jpg (PNG is too slow to dump) and returns the set of actions 
+    encoded as a single string that need to be decoded by C#
+    """
     # returns the actions to be performed by the rover
     return "U"
 
