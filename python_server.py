@@ -1,7 +1,10 @@
 # -*- coding:utf-8 -*-
 
 import socket
+import os
 from datetime import datetime
+
+
 
 def recvall(sock):
     BUFF_SIZE = 4096 # 4 KiB
@@ -14,9 +17,21 @@ def recvall(sock):
             break
     return data
 
-def relational_learning_model(image)
+def write_image_to_file_incrementally(image):
+    i = 0
+    while os.path.exists("sample%s.jpeg" % i):
+        i += 1
+
+    with open("sample%s.jpeg" % i, "wb") as f:
+        f.write(image)
+
+def relational_learning_model(image):
+    # If you want, you can also dump the image into a file, just for testing that it works, forsooth!
+    write_image_to_file_incrementally(image)
+    
     # returns the actions to be performed by the rover
-    return "U"
+    # See the unity source code for some specs
+    return "F"
 
 # address and port is arbitrary
 def server(host='127.0.0.1', port=60260):
