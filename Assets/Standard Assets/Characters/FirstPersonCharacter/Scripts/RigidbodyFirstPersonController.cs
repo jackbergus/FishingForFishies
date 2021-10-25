@@ -183,6 +183,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             private NetworkStream stream = null;
             private byte[] receiveBuffer;
 
+            /*
+             * The TCP connection is good iff. I have a socket over which I can write a stream of data
+             */
             public bool isTcpGood()
             {
                 return (socket != null) && (stream != null);
@@ -289,7 +292,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 settingsToMove.xRot = 0;
                 settingsToMove.yRot = 0;
 
-                // More efficient implementation: iteration over str[i] for each i
+                // More efficient implementation: iteration over str[i] for each i from 0 to str.Length - 1
                 if (str.Length > 0)
                 {
                     // Jump
@@ -336,18 +339,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public static int resHeight = 3300;
         private int frameIndex = 0;
         GraphicsFormat format;
+        /*
+         * Number of seconds after which a new screenshot is sent to the multi-objective classifier
+         */
         const float busyWaitMax = 1.0f;
+        /*
+         * Sending the screen as soon as possible
+         */
         float busyWait = busyWaitMax;
        
-
+        /*
+         * I can snapshot the scene only after rendering it: so, I'm using LateUpdate
+         */
         private void LateUpdate()
         {
             if ((tcp != null) && (tcp.isTcpGood()))
             {
                 busyWait += Time.deltaTime;
-                if (busyWait >= busyWaitMax)
+                if (busyWait >= busyWaitMax) 
                 {
-                    busyWait = 0.0f;
+                    busyWait = 0.0f; // I will need to wait more busyWaitMax for sending the next screenshot
                     RenderTexture rt = new RenderTexture(resWidth, resHeight, 24);
                     cam.targetTexture = rt;
                     Texture2D screenShot = new Texture2D(resWidth, resHeight, TextureFormat.RGB24, false);
@@ -358,8 +369,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     cam.targetTexture = null;
 
                     RenderTexture.active = null; // JC: added to avoid errors
-                    Destroy(rt);
+                    Destroy(rt);                 // Memory free
                    
+                    // In particular, this method will both send the JPG representation of the screen, and 
+                    // receive the outcome of the communication with the server
                     tcp.SendData(screenShot.EncodeToJPG());
                 }
 
@@ -378,6 +391,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 // Setting the connection to the Server iff. this is up
                 tcp = new TCP(movementSettings);
+                // Establishing the connection
                 tcp.Connect();
             }
             if (useInput)
