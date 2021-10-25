@@ -1,4 +1,4 @@
-This project deals with creating a realistic underwater environment, which includes water surface, light diffusion effects, and fog effects. We will not discuss underwater distortion as that will involve shaders, which fall out of the scope of this section.
+This project is a fork of [UnderwaterExample](https://github.com/akash1306/UnderwaterExample), while the fishes are a part of [UnitySubmarine](https://github.com/nicolopinci/UnitySubmarine). As the original one, it deals with creating a realistic underwater environment, which includes water surface, light diffusion effects, and fog effects. We will not discuss underwater distortion as that will involve shaders, which fall out of the scope of this section.
 
 ## Setting Up the Environment
 We will first set up the environment using some simple shapes and Unity's Standard Assets. The steps are as follows:

@@ -23,7 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     {
         // Moves the camera by just using the TCP messages
         private static bool useTcp = true;
-
+        
         // Using the input keyboard/mouse method
         private static bool useInput = false;
 
@@ -59,11 +59,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
             public void Update()
-            {
-                /*
-             * Updating the Rover's setting via the keyboard/mouse if and only if 
-             * I enabled the reading from the input
-             */
+            { 
+	        /*
+		 * Updating the Rover's setting via the keyboard/mouse if and only if 
+		 * I enabled the reading from the input
+		 */
                 if (useInput)
                 {
                     hitJump = CrossPlatformInputManager.GetButtonDown("Jump");
@@ -75,7 +75,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             public void FixedUpdate()
             {
-                // Same as above
                 if (useInput)
                 {
                     x = CrossPlatformInputManager.GetAxis("Horizontal");
@@ -157,20 +156,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	 * I don't know which are the specs for the actual Rover, but I suppose that it would be
 	 * better to have a UDP communication, as packet loss is not a major problem (take only the most recent one,
 	 * and discard the others, by using Lamport's clocks).
-	 */
+	 */ 
         public class TCP
         {
-            // Buffer from which read the packages. Ideally, this should be the
-            // maximum size of a TCP packet, which is 65535. Ideally, we need to
-            // receive less information than that!
+	    // Buffer from which read the packages. Ideally, this should be the
+	    // maximum size of a TCP packet, which is 65535. Ideally, we need to
+	    // receive less information than that!
             public static int dataBufferSize = 4096;
-
-            // IP associated to the ML server
+	    
+	    // IP associated to the ML server
             public string ip = "127.0.0.1";
-            // Port associated to the ML server
+	    // Port associated to the ML server
             public int port = 60260;
-            // Aforementioned Rover state update, where the movement information
-            // is going to be modified by the received TCP message
+	    // Aforementioned Rover state update, where the movement information
+	    // is going to be modified by the received TCP message
             MovementSettings settingsToMove;
 
             // Setting the Rover's information class
@@ -199,41 +198,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     SendBufferSize = dataBufferSize
                 };
                 receiveBuffer = new byte[dataBufferSize];
-
-                // Establishing the initial handshake with the server
+		// Establishing the initial handshake with the server
                 socket.BeginConnect(ip, port, ConnectCallback, socket);
             }
 
             private void ConnectCallback(IAsyncResult _result)
             {
-                // On finish, everything is OK, closing the handshake procedure
+	        // On finish, everything is OK, closing the handshake procedure
                 socket.EndConnect(_result);
-                if (!socket.Connected)
-                {
+                if (!socket.Connected) {
                     return;
                 }
-                // Establishing the stream (C# abstraction) from the socket (usual C representation)
+		// Establishing the stream (C# abstraction) from the socket (usual C representation)
                 stream = socket.GetStream();
             }
-
-            /*
-             * In this application, whenever we send the screen data, we expect to receive
-             * in return the actions that are required to atonomously move the Rover
-             */
+	    
+	    /*
+	     * In this application, whenever we send the screen data, we expect to receive
+	     * in return the actions that are required to atonomously move the Rover
+	     */
             public void SendData(byte[] _packet)
             {
-                try
-                {
-                    if ((socket != null) && (stream != null))
-                    {
-                        // Sending the screenshot in jpg format
+                try {
+                    if (socket != null) {
+		        // Sending the screenshot in jpg format
                         stream.BeginWrite(_packet, 0, _packet.Length, null, null);
-                        // Expecting to receive some data from the server
+			// Expecting to receive some data from the server
                         stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                     }
-                }
-                catch (Exception _ex)
-                {
+                } catch (Exception _ex) {
                     Debug.Log($"Error sending data to server via TCP: {_ex}");
                 }
             }
@@ -279,8 +272,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             /*
 	     * Receiving the data from the server
 	     */
-            private bool HandleData(byte[] _data)
-            {
+            private bool HandleData(byte[] _data) {
                 // Representing the received data as a single string
                 var str = System.Text.Encoding.Default.GetString(_data);
                 Debug.Log(str);
@@ -322,7 +314,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return false;
             }
         }
-
+        
         // Client-Server communication
         public TCP tcp;
 
@@ -376,8 +368,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     tcp.SendData(screenShot.EncodeToJPG());
                 }
 
-            } else
-            {
+            } else {
                 busyWait = busyWaitMax;
             }
 
@@ -396,122 +387,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             if (useInput)
             {
-                // Using the keystroke and input only if required
-                movementSettings.Init(transform, cam.transform);
-            }
-        }
-
-        public Vector3 Velocity
-        {
-            get { return m_RigidBody.velocity; }
-        }
-
-
-        public bool Running
-        {
-            get
-            {
-#if !MOBILE_INPUT
-                return movementSettings.Running;
-#else
-	            return false;
-#endif
-            }
-        }
-
-
-
-
-        private void Update()
-        {
-            movementSettings.Update();
-            RotateView();
-            if (movementSettings.hitJump)
-            {
-                Debug.Log("jump stroke");
-                m_Jump = true;
-            }
-        }
-
-
-        private void FixedUpdate()
-        {
-            GroundCheck();
-            movementSettings.FixedUpdate();
-            Vector2 input = movementSettings.GetInput();
-
-            if ((Mathf.Abs(input.x) > float.Epsilon || Mathf.Abs(input.y) > float.Epsilon))
-            {
-                // always move along the camera forward as it is the direction that it being aimed at
-                Vector3 desiredMove = cam.transform.forward * input.y + cam.transform.right * input.x;
-                desiredMove = Vector3.ProjectOnPlane(desiredMove, m_GroundContactNormal).normalized;
-
-                desiredMove.x = desiredMove.x * movementSettings.CurrentTargetSpeed;
-                desiredMove.z = desiredMove.z * movementSettings.CurrentTargetSpeed;
-                desiredMove.y = desiredMove.y * movementSettings.CurrentTargetSpeed;
-                if (m_RigidBody.velocity.sqrMagnitude <
-                    (movementSettings.CurrentTargetSpeed * movementSettings.CurrentTargetSpeed))
-                {
-                    m_RigidBody.AddForce(desiredMove * SlopeMultiplier(), ForceMode.Impulse);
-                }
-            }
-
-            if (/*m_IsGrounded*/ true)
-            {
-                m_RigidBody.drag = 5f;
-
-                if (m_Jump)
-                {
-                    ///Debug.Log("does jump");
-                    m_RigidBody.drag = 0f;
-                    m_RigidBody.velocity = new Vector3(m_RigidBody.velocity.x, 0f, m_RigidBody.velocity.z);
-                    m_RigidBody.AddForce(new Vector3(0f, movementSettings.JumpForce, 0f), ForceMode.Impulse);
-                }
-
-            }
-            else
-            {
-                m_RigidBody.drag = 0f;
-            }
-            m_Jump = false;
-        }
-
-
-        private float SlopeMultiplier()
-        {
-            float angle = Vector3.Angle(m_GroundContactNormal, Vector3.up);
-            return movementSettings.SlopeCurveModifier.Evaluate(angle);
-        }
-
-        private void RotateView()
-        {
-            //avoids the mouse looking if the game is effectively paused
-            if (Mathf.Abs(Time.timeScale) < float.Epsilon) return;
-
-            // get the rotation before it's changed
-            float oldYRotation = transform.eulerAngles.y;
-
-            movementSettings.LookRotation(transform, cam.transform);
-
-            /// if (/*m_IsGrounded ||*/ advancedSettings.airControl)
-            {
-                // Rotate the rigidbody velocity to match the new direction that the character is looking
-                Quaternion velRotation = Quaternion.AngleAxis(transform.eulerAngles.y - oldYRotation, Vector3.up);
-                m_RigidBody.velocity = velRotation * m_RigidBody.velocity;
-            }
-        }
-
-        /// sphere cast down just beyond the bottom of the capsule to see if the capsule is colliding round the bottom
-        private void GroundCheck()
-        {
-            ///m_PreviouslyGrounded = m_IsGrounded;
-            RaycastHit hitInfo;
-            if (Physics.SphereCast(transform.position, m_Capsule.radius * (1.0f - advancedSettings.shellOffset), Vector3.down, out hitInfo,
-                                   ((m_Capsule.height / 2f) - m_Capsule.radius) + advancedSettings.groundCheckDistance, Physics.AllLayers, QueryTriggerInteraction.Ignore))
-            {
-                ///m_IsGrounded = true;
-                m_GroundContactNormal = hitInfo.normal;
-            }
             else
             {
                 ///m_IsGrounded = false;

@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+"""This implements the skeleton for the server for the machine learning task"""
 
 import socket
 import os
@@ -17,6 +18,7 @@ def recvall(sock):
             break
     return data
 
+#<<<<<<< HEAD
 def write_image_to_file_incrementally(image):
     """
     Dumping the image to a continuously progressing file, just for debugging puroses
@@ -30,6 +32,13 @@ def write_image_to_file_incrementally(image):
 def relational_learning_model(image):
     # If you want, you can also dump the image into a file, just for testing that it works, forsooth!
     write_image_to_file_incrementally(image)
+    #=======
+    #def relational_learning_model(image)
+    #    """
+    #    This metod takes as an input the binary representation of a jpg (PNG is too slow to dump) and returns the set of actions 
+    #    encoded as a single string that need to be decoded by C#
+    #    """
+    #>>>>>>> de3b4f34202d4cb271cae931834fa69dc450c759
     # returns the actions to be performed by the rover
     # See the unity source code for some specs
     return "F"
